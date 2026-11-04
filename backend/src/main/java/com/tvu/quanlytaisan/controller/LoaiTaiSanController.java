@@ -35,7 +35,7 @@ public class LoaiTaiSanController {
     }
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_LOAITAISAN')")
     public ResponseEntity<ApiResponse<LoaiTaiSanResponse>> createLoaiTaiSan(@Valid @RequestBody LoaiTaiSanRequest request) {
         LoaiTaiSanResponse response = loaiTaiSanService.createLoaiTaiSan(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -43,7 +43,7 @@ public class LoaiTaiSanController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_LOAITAISAN')")
     public ResponseEntity<ApiResponse<LoaiTaiSanResponse>> updateLoaiTaiSan(
             @PathVariable Integer id,
             @Valid @RequestBody LoaiTaiSanRequest request) {
@@ -52,7 +52,7 @@ public class LoaiTaiSanController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_LOAITAISAN')")
     public ResponseEntity<ApiResponse<Void>> deleteLoaiTaiSan(@PathVariable Integer id) {
         loaiTaiSanService.deleteLoaiTaiSan(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa loại tài sản thành công"));

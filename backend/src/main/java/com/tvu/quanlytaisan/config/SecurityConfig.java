@@ -33,12 +33,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configure(http))
+                .cors(cors -> {})  // Sử dụng corsConfigurationSource bean
                 .authorizeHttpRequests(auth -> auth
                         // Allow OPTIONS requests for CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public endpoints
-                        .requestMatchers("/auth/**", "/test/**", "/error").permitAll()
+                        .requestMatchers("/auth/**", "/error").permitAll()
                         // Admin-only endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // All other requests require authentication

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, message, Popconfirm, Progress } from 'antd'
+import { Card, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, message, Popconfirm, Progress, Grid } from 'antd'
 import { PlusOutlined, EyeOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import kiemkeApi from '../../../api/kiemkeApi'
 import donviApi from '../../../api/donviApi'
@@ -10,6 +10,8 @@ import PhamViKiemKeCard from '../../../components/PhamViKiemKeCard'
 import { TRANG_THAI_DOT_KIEM_KE, TRANG_THAI_DOT_KIEM_KE_LABEL, TRANG_THAI_DOT_KIEM_KE_COLOR } from '../../../utils/constants'
 import ChiTietDotKiemKe from '../components/ChiTietDotKiemKe'
 import dayjs from 'dayjs'
+
+const { useBreakpoint } = Grid
 
 const DanhSachDotKiemKe = () => {
   const [data, setData] = useState([])
@@ -27,6 +29,10 @@ const DanhSachDotKiemKe = () => {
   const [selectedTruong, setSelectedTruong] = useState(null)
   const [selectedKhoa, setSelectedKhoa] = useState(null)
   const [form] = Form.useForm()
+  
+  const screens = useBreakpoint()
+  const isMobile = screens.xs || screens.sm
+  const isTablet = screens.md && !screens.lg
 
   useEffect(() => {
     fetchData()
@@ -184,6 +190,78 @@ const DanhSachDotKiemKe = () => {
     return capPhongBan.filter(pb => pb.donviCha?.donviId === selectedKhoa)
   }
 
+  // Mobile card view renderer
+  const renderMobileCard = (record) => (
+    <Card 
+      key={record.dotkiemkeId}
+      size="small"
+      style={{ marginBottom: 12 }}
+      title={
+        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+          <div style={{ fontWeight: 500, fontSize: 14 }}>{record.tendot}</div>
+          <div style={{ fontSize: 12, color: '#888', fontWeight: 'normal' }}>
+            {record.tendonvi} • {dayjs(record.ngaybatdau).format('DD/MM/YYYY')}
+          </div>
+        </Space>
+      }
+      extra={
+        <Tag color={TRANG_THAI_DOT_KIEM_KE_COLOR[record.trangthai]} style={{ margin: 0 }}>
+          {TRANG_THAI_DOT_KIEM_KE_LABEL[record.trangthai]}
+        </Tag>
+      }
+    >
+      <Space direction="vertical" style={{ width: '100%' }} size="small">
+        {/* Tiến độ */}
+        <div>
+          <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Tiến độ kiểm kê</div>
+          <Progress 
+            percent={record.tongTaiSan > 0 ? Math.round((record.daKiem / record.tongTaiSan) * 100) : 0} 
+            size="small"
+            format={() => `${record.daKiem}/${record.tongTaiSan}`}
+          />
+        </div>
+
+        {/* Kết quả */}
+        <div>
+          <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Kết quả</div>
+          <Space size={8} wrap>
+            <Tag color="success">✓ {record.coMatDungViTri}</Tag>
+            <Tag color="warning">⚠ {record.coMatLechViTri}</Tag>
+            <Tag color="error">✗ {record.thieu}</Tag>
+          </Space>
+        </div>
+
+        {/* Actions */}
+        <Space style={{ width: '100%', justifyContent: 'flex-end', marginTop: 8 }}>
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+          >
+            Chi tiết
+          </Button>
+          {record.trangthai === TRANG_THAI_DOT_KIEM_KE.DANGMO && (
+            <Popconfirm
+              title="Đóng đợt kiểm kê"
+              description="Bạn có chắc chắn muốn đóng đợt kiểm kê này?"
+              onConfirm={() => handleDongDot(record.dotkiemkeId)}
+              okText="Đóng"
+              cancelText="Hủy"
+            >
+              <Button
+                size="small"
+                type="primary"
+                icon={<CheckCircleOutlined />}
+              >
+                Đóng đợt
+              </Button>
+            </Popconfirm>
+          )}
+        </Space>
+      </Space>
+    </Card>
+  )
+
   const columns = [
     {
       title: 'Tên đợt kiểm kê',
@@ -284,9 +362,39 @@ const DanhSachDotKiemKe = () => {
     <Card
       title="Danh sách đợt kiểm kê"
       extra={
-        <Space>
+        <Space wrap>
+          {!isMobile && (
+            <Select
+              style={{ width: 150 }}
+              placeholder="Lọc trạng thái"
+              allowClear
+              value={filterTrangthai}
+              onChange={setFilterTrangthai}
+            >
+              <Select.Option value={TRANG_THAI_DOT_KIEM_KE.DANGMO}>
+                {TRANG_THAI_DOT_KIEM_KE_LABEL.DANGMO}
+              </Select.Option>
+              <Select.Option value={TRANG_THAI_DOT_KIEM_KE.DADONG}>
+                {TRANG_THAI_DOT_KIEM_KE_LABEL.DADONG}
+              </Select.Option>
+            </Select>
+          )}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            size={isMobile ? 'middle' : 'middle'}
+          >
+            {isMobile ? 'Tạo' : 'Tạo đợt kiểm kê'}
+          </Button>
+        </Space>
+      }
+    >
+      {/* Mobile filter on top of list */}
+      {isMobile && (
+        <div style={{ marginBottom: 16 }}>
           <Select
-            style={{ width: 150 }}
+            style={{ width: '100%' }}
             placeholder="Lọc trạng thái"
             allowClear
             value={filterTrangthai}
@@ -299,27 +407,38 @@ const DanhSachDotKiemKe = () => {
               {TRANG_THAI_DOT_KIEM_KE_LABEL.DADONG}
             </Select.Option>
           </Select>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-          >
-            Tạo đợt kiểm kê
-          </Button>
-        </Space>
-      }
-    >
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="dotkiemkeId"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} đợt kiểm kê`,
-        }}
-      />
+        </div>
+      )}
+
+      {/* Conditional rendering: Mobile cards vs Desktop table */}
+      {isMobile ? (
+        <div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>Đang tải...</div>
+          ) : data.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+              Không có dữ liệu
+            </div>
+          ) : (
+            data.map(record => renderMobileCard(record))
+          )}
+        </div>
+      ) : (
+        <Table
+          columns={isTablet ? columns.filter(col => 
+            ['tendot', 'tendonvi', 'trangthai', 'tiendo', 'action'].includes(col.key)
+          ) : columns}
+          dataSource={data}
+          rowKey="dotkiemkeId"
+          loading={loading}
+          scroll={isTablet ? { x: 800 } : undefined}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} đợt kiểm kê`,
+          }}
+        />
+      )}
 
       <Modal
         title="Tạo đợt kiểm kê mới"
@@ -332,7 +451,9 @@ const DanhSachDotKiemKe = () => {
           setSelectedKhoa(null)
         }}
         footer={null}
-        width={700}
+        width={isMobile ? '100%' : isTablet ? '90%' : 700}
+        style={isMobile ? { top: 0, maxWidth: '100vw', paddingBottom: 0 } : {}}
+        styles={isMobile ? { body: { maxHeight: 'calc(100vh - 110px)', overflowY: 'auto' } } : {}}
       >
         <Form
           form={form}
@@ -351,7 +472,11 @@ const DanhSachDotKiemKe = () => {
           </Form.Item>
 
           <Form.Item label="Phạm vi kiểm kê">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '1fr 1fr 1fr', 
+              gap: '10px' 
+            }}>
               <PhamViKiemKeCard
                 value="TOAN_TRUONG"
                 currentValue={phamViKiemKe}

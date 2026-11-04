@@ -8,27 +8,26 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
+import com.tvu.quanlytaisan.service.ThongKeService;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/thongke")
 @RequiredArgsConstructor
 public class ThongKeController {
-    
+
+    private final ThongKeService thongKeService;
+
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats() {
-        // Temporary mock data - se duoc thay the bang du lieu thuc sau
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalAssets", 0);
-        stats.put("totalCategories", 0);
-        stats.put("totalUsers", 2); // admin + user
-        stats.put("assetsInUse", 0);
-        stats.put("assetsAvailable", 0);
-        stats.put("assetsMaintenance", 0);
-        stats.put("assetsBroken", 0);
-        
-        return ResponseEntity.ok(ApiResponse.success(stats));
+        return ResponseEntity.ok(ApiResponse.success(thongKeService.getDashboardStats()));
+    }
+
+    @GetMapping("/dashboard/me")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMyDashboardStats() {
+        return ResponseEntity.ok(ApiResponse.success(thongKeService.getMyDashboardStats()));
     }
 }

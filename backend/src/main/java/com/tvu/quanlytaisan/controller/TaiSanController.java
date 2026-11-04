@@ -57,8 +57,15 @@ public class TaiSanController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
     
+    @GetMapping("/by-don-vi/{donviId}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_TAISAN')")
+    public ResponseEntity<ApiResponse<List<TaiSanResponse>>> getTaiSanByDonVi(@PathVariable Integer donviId) {
+        List<TaiSanResponse> response = taiSanService.getTaiSanByDonVi(donviId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+    
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_TAISAN')")
     public ResponseEntity<ApiResponse<TaiSanResponse>> createTaiSan(@Valid @RequestBody TaiSanRequest request) {
         TaiSanResponse response = taiSanService.createTaiSan(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -66,7 +73,7 @@ public class TaiSanController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_TAISAN')")
     public ResponseEntity<ApiResponse<TaiSanResponse>> updateTaiSan(
             @PathVariable Long id,
             @Valid @RequestBody TaiSanRequest request) {
@@ -75,7 +82,7 @@ public class TaiSanController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_TAISAN')")
     public ResponseEntity<ApiResponse<Void>> deleteTaiSan(@PathVariable Long id) {
         taiSanService.deleteTaiSan(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa tài sản thành công"));

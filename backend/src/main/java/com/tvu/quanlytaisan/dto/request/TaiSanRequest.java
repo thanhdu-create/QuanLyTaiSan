@@ -26,12 +26,19 @@ public class TaiSanRequest {
     
     private String thongsokythuat;
     
-    @NotNull(message = "Ngày nhập không được để trống")
-    private LocalDate ngaynhap;
+    @NotNull(message = "Ngày mua không được để trống")
+    private LocalDate ngaymua;
     
     @NotNull(message = "Giá trị không được để trống")
     @DecimalMin(value = "0.0", message = "Giá trị phải lớn hơn hoặc bằng 0")
     private BigDecimal giatri;
+    
+    @Min(value = 1, message = "Thời gian sử dụng phải lớn hơn 0")
+    private Integer thoigianSudung = 5;
+    
+    @DecimalMin(value = "0.0", message = "Tỷ lệ thanh lý phải lớn hơn hoặc bằng 0")
+    @DecimalMax(value = "100.0", message = "Tỷ lệ thanh lý không được quá 100%")
+    private BigDecimal tileThanhLy = new BigDecimal("10.00");
     
     private Integer vitriId;
     

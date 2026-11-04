@@ -27,6 +27,13 @@ public interface TaiSanRepository extends JpaRepository<TaiSan, Long> {
     @Query("SELECT t FROM TaiSan t WHERE t.daxoa = false AND t.vitri.donvi.donviId = :donviId")
     List<TaiSan> findByViTriDonviDonviId(@Param("donviId") Integer donviId);
     
+    // Lay danh sach tai san theo don vi - cho bao tri batch
+    @Query("SELECT t FROM TaiSan t " +
+           "JOIN t.vitri v " +
+           "WHERE v.donvi.donviId = :donviId " +
+           "AND t.daxoa = false")
+    List<TaiSan> findByDonViId(@Param("donviId") Integer donviId);
+    
     // Tim kiem tai san theo ten hoac ma
     @Query("SELECT t FROM TaiSan t WHERE t.daxoa = false AND " +
            "(LOWER(t.tentaisan) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -36,4 +43,12 @@ public interface TaiSanRepository extends JpaRepository<TaiSan, Long> {
     // Lay tai san theo loai
     @Query("SELECT t FROM TaiSan t WHERE t.daxoa = false AND t.loaitaisan.loaitaisanId = :loaitaisanId")
     List<TaiSan> findByLoaiTaiSan(@Param("loaitaisanId") Integer loaitaisanId);
+
+    // Danh sach tai san sap xep moi nhat truoc
+    List<TaiSan> findByDaxoaFalseOrderByCreatedAtDescTaisanIdDesc();
+
+    // Tai san dang duoc mot nguoi dung su dung
+    @Query("SELECT t FROM TaiSan t WHERE t.daxoa = false AND t.nguoisudung.nguoidungId = :nguoidungId " +
+           "ORDER BY t.createdAt DESC, t.taisanId DESC")
+    List<TaiSan> findByNguoisudung(@Param("nguoidungId") Long nguoidungId);
 }

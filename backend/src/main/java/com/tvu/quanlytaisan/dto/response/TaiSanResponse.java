@@ -24,8 +24,19 @@ public class TaiSanResponse {
     private String tenloai;
     
     private String thongsokythuat;
-    private LocalDate ngaynhap;
+    private LocalDate ngaymua;
     private BigDecimal giatri;
+    
+    // Thong tin khau hao
+    private Integer thoigianSudung;
+    private BigDecimal tileThanhLy;
+    private Long soNgayDaSuDung;
+    private BigDecimal soNamDaSuDung;
+    private BigDecimal giaTriThanhLy;
+    private BigDecimal khauHaoNam;
+    private BigDecimal tongKhauHao;
+    private BigDecimal tyleKhauHao;
+    private BigDecimal giaTriConLai;
     
     // Thong tin vi tri
     private Integer vitriId;
@@ -37,6 +48,7 @@ public class TaiSanResponse {
     
     // Thong tin trang thai
     private Integer trangthaitaisanId;
+    private String matrangthai;
     private String tentrangthai;
     
     // Thong tin nguoi su dung
@@ -44,7 +56,8 @@ public class TaiSanResponse {
     private String tennguoisudung;
     
     private Boolean daxoa;
-    private LocalDateTime ngaytao;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // QR Code (base64 string)
     private String qrCode;

@@ -109,7 +109,6 @@ backend/
 - **KiemKeController**: Tạo đợt kiểm kê, ghi nhận kết quả
 - **ThongKeController**: Dashboard, báo cáo
 - **NguoiDungController**: Quản lý người dùng (ADMIN)
-- **DanhMucController**: Quản lý đơn vị, vị trí, loại tài sản
 
 ## Phân quyền
 

@@ -30,6 +30,9 @@ const baoTriApi = {
   
   // Lay danh sach tai san can bao tri
   getCanBaoTri: () => axiosClient.get('/bao-tri/can-bao-tri'),
+  
+  // Tao nhieu phieu bao tri (batch)
+  createBatch: (data) => axiosClient.post('/bao-tri/batch', data),
 }
 
 export default baoTriApi

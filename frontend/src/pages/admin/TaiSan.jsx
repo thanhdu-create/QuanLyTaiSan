@@ -7,14 +7,18 @@ import {
   Input,
   Space,
   message,
-  Popconfirm,
   Card,
   Select,
   DatePicker,
   InputNumber,
   Tag,
+  Dropdown,
+  Grid,
+  Empty,
+  Pagination,
+  Spin,
 } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, QrcodeOutlined, DownloadOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, QrcodeOutlined, DownloadOutlined, EllipsisOutlined } from '@ant-design/icons'
 import taiSanApi from '../../api/taiSanApi'
 import loaiTaiSanApi from '../../api/loaiTaiSanApi'
 import donViApi from '../../api/donviApi'
@@ -39,6 +43,16 @@ const TaiSan = () => {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false)
   const [selectedTaiSan, setSelectedTaiSan] = useState(null)
   const [form] = Form.useForm()
+
+  const screens = Grid.useBreakpoint()
+  // Phone: dưới breakpoint md (768px); tablet/desktop dùng bảng
+  const isMobile = screens.md === false
+  const [mobilePage, setMobilePage] = useState(1)
+  const MOBILE_PAGE_SIZE = 10
+  // Tổng số trang an toàn khi dữ liệu co lại sau khi tìm kiếm
+  const mobileTotalPages = Math.max(1, Math.ceil(data.length / MOBILE_PAGE_SIZE))
+  const safeMobilePage = Math.min(mobilePage, mobileTotalPages)
+  const mobileData = data.slice((safeMobilePage - 1) * MOBILE_PAGE_SIZE, safeMobilePage * MOBILE_PAGE_SIZE)
 
   useEffect(() => {
     fetchData()
@@ -124,8 +138,10 @@ const TaiSan = () => {
     // Set default values
     form.setFieldsValue({
       mataisan: nextCode,
-      ngaynhap: dayjs(),
+      ngaymua: dayjs(),
       giatri: 0,
+      thoigianSudung: 5,
+      tileThanhLy: 10,
       trangthaitaisanId: 1, // Default: Available
     })
     setIsModalOpen(true)
@@ -157,8 +173,10 @@ const TaiSan = () => {
       tentaisan: record.tentaisan,
       loaitaisanId: record.loaitaisanId,
       thongsokythuat: record.thongsokythuat,
-      ngaynhap: record.ngaynhap ? dayjs(record.ngaynhap) : null,
+      ngaymua: record.ngaymua ? dayjs(record.ngaymua) : null,
       giatri: record.giatri,
+      thoigianSudung: record.thoigianSudung || 5,
+      tileThanhLy: record.tileThanhLy || 10,
       donviId: record.donviId,
       vitriId: record.vitriId,
       trangthaitaisanId: record.trangthaitaisanId,
@@ -224,7 +242,7 @@ const TaiSan = () => {
     try {
       const submitData = {
         ...values,
-        ngaynhap: values.ngaynhap.format('YYYY-MM-DD'),
+        ngaymua: values.ngaymua.format('YYYY-MM-DD'),
       }
       
       // Remove donviId before sending to backend
@@ -244,6 +262,66 @@ const TaiSan = () => {
       message.error(error.response?.data?.message || 'Có lỗi xảy ra')
     }
   }
+
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0)
+
+  const renderTrangThaiTag = (text) => {
+    let color = 'default'
+    if (text === 'Đang sử dụng') color = 'green'
+    else if (text === 'Sẵn sàng') color = 'blue'
+    else if (text === 'Bảo trì') color = 'orange'
+    else if (text === 'Hỏng') color = 'red'
+    return <Tag color={color}>{text}</Tag>
+  }
+
+  const renderKhauHaoTag = (value) => {
+    const percent = parseFloat(value || 0)
+    let color = 'success'
+    if (percent >= 80) color = 'error'
+    else if (percent >= 50) color = 'warning'
+    return <Tag color={color}>{percent.toFixed(1)}%</Tag>
+  }
+
+  const handleConfirmDelete = (record) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa tài sản này?',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: () => handleDelete(record.taisanId),
+    })
+  }
+
+  const actionMenuItems = (record) => [
+    {
+      key: 'view-qr',
+      icon: <QrcodeOutlined />,
+      label: 'Xem mã QR',
+      onClick: () => handleViewQR(record),
+    },
+    {
+      key: 'download-qr',
+      icon: <DownloadOutlined />,
+      label: 'Tải mã QR',
+      onClick: () => handleDownloadQR(record),
+    },
+    {
+      key: 'edit',
+      icon: <EditOutlined />,
+      label: 'Sửa',
+      onClick: () => handleEdit(record),
+    },
+    { type: 'divider' },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      label: 'Xóa',
+      danger: true,
+      onClick: () => handleConfirmDelete(record),
+    },
+  ]
 
   const columns = [
     {
@@ -266,10 +344,10 @@ const TaiSan = () => {
       width: 150,
     },
     {
-      title: 'Giá trị',
+      title: 'Giá trị gốc',
       dataIndex: 'giatri',
       key: 'giatri',
-      width: 150,
+      width: 130,
       render: (value) =>
         new Intl.NumberFormat('vi-VN', {
           style: 'currency',
@@ -277,82 +355,74 @@ const TaiSan = () => {
         }).format(value),
     },
     {
-      title: 'Ngày nhập',
-      dataIndex: 'ngaynhap',
-      key: 'ngaynhap',
-      width: 120,
+      title: 'Ngày mua',
+      dataIndex: 'ngaymua',
+      key: 'ngaymua',
+      width: 110,
       render: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : '-'),
+    },
+    {
+      title: 'TG sử dụng',
+      key: 'thoigianSudung',
+      width: 120,
+      responsive: ['lg'],
+      render: (_, record) => {
+        const daDung = record.soNamDaSuDung ? parseFloat(record.soNamDaSuDung).toFixed(1) : '0.0'
+        const duKien = record.thoigianSudung || 5
+        return (
+          <span title={`Đã dùng ${daDung} năm / Dự kiến ${duKien} năm`}>
+            {daDung} / {duKien} năm
+          </span>
+        )
+      },
+    },
+    {
+      title: 'Khấu hao',
+      dataIndex: 'tyleKhauHao',
+      key: 'tyleKhauHao',
+      width: 100,
+      render: (value) => renderKhauHaoTag(value),
+    },
+    {
+      title: 'Giá trị còn lại',
+      dataIndex: 'giaTriConLai',
+      key: 'giaTriConLai',
+      width: 130,
+      responsive: ['lg'],
+      render: (value) =>
+        new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(value || 0),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'tentrangthai',
       key: 'tentrangthai',
-      width: 130,
-      render: (text) => {
-        let color = 'default'
-        if (text === 'Đang sử dụng') color = 'green'
-        else if (text === 'Sẵn sàng') color = 'blue'
-        else if (text === 'Bảo trì') color = 'orange'
-        else if (text === 'Hỏng') color = 'red'
-        return <Tag color={color}>{text}</Tag>
-      },
+      width: 120,
+      render: (text) => renderTrangThaiTag(text),
     },
     {
       title: 'Vị trí',
       dataIndex: 'tenvitri',
       key: 'tenvitri',
-      width: 150,
+      width: 130,
       render: (text) => text || '-',
     },
     {
       title: 'Thao tác',
       key: 'action',
-      width: 220,
+      width: 80,
       fixed: 'right',
+      align: 'center',
       render: (_, record) => (
-        <Space size="small">
-          <Button 
-            type="link" 
-            size="small"
-            icon={<QrcodeOutlined />} 
-            onClick={() => handleViewQR(record)}
-            title="Xem mã QR"
-          >
-            QR
-          </Button>
-          <Button 
-            type="link" 
-            size="small"
-            icon={<DownloadOutlined />} 
-            onClick={() => handleDownloadQR(record)}
-            title="Tải mã QR"
-          />
-          <Button 
-            type="link" 
-            size="small"
-            icon={<EditOutlined />} 
-            onClick={() => handleEdit(record)}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xác nhận xóa"
-            description="Bạn có chắc chắn muốn xóa tài sản này?"
-            onConfirm={() => handleDelete(record.taisanId)}
-            okText="Xóa"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
-          >
-            <Button 
-              type="link" 
-              size="small"
-              danger 
-              icon={<DeleteOutlined />}
-            >
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
+        <Dropdown
+          menu={{ items: actionMenuItems(record) }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <Button type="text" icon={<EllipsisOutlined />} />
+        </Dropdown>
       ),
     },
   ]
@@ -360,7 +430,7 @@ const TaiSan = () => {
   return (
     <Card
       title="Quản lý Tài Sản"
-      extra={
+      extra={!isMobile && (
         <Space>
           <Input.Search
             placeholder="Tìm theo mã hoặc tên"
@@ -374,20 +444,93 @@ const TaiSan = () => {
             Thêm tài sản
           </Button>
         </Space>
-      }
+      )}
+      styles={{ body: { padding: isMobile ? 12 : 24 } }}
     >
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="taisanId"
-        loading={loading}
-        scroll={{ x: 1300 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} tài sản`,
-        }}
-      />
+      {isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+          <Input.Search
+            placeholder="Tìm theo mã hoặc tên"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onSearch={handleSearch}
+            allowClear
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} block>
+            Thêm tài sản
+          </Button>
+        </div>
+      )}
+
+      {isMobile ? (
+        <div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <Spin />
+            </div>
+          ) : data.length === 0 ? (
+            <Empty description="Không có tài sản" />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {mobileData.map((record) => (
+                <Card key={record.taisanId} size="small">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <Space size={6} wrap>
+                        <strong>{record.mataisan}</strong>
+                        {renderTrangThaiTag(record.tentrangthai)}
+                      </Space>
+                      <div style={{ marginTop: 4, fontWeight: 500 }}>{record.tentaisan}</div>
+                      <div style={{ fontSize: 12, color: '#888' }}>{record.tenloai}</div>
+                    </div>
+                    <Dropdown
+                      menu={{ items: actionMenuItems(record) }}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button type="text" icon={<EllipsisOutlined />} />
+                    </Dropdown>
+                  </div>
+                  <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 13 }}>
+                    <div>Giá trị: <strong>{formatCurrency(record.giatri)}</strong></div>
+                    <div>Còn lại: <strong>{formatCurrency(record.giaTriConLai)}</strong></div>
+                    <div>Khấu hao: {renderKhauHaoTag(record.tyleKhauHao)}</div>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Vị trí: {record.tenvitri || '—'}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+            <Pagination
+              size="small"
+              simple
+              current={safeMobilePage}
+              pageSize={MOBILE_PAGE_SIZE}
+              total={data.length}
+              onChange={setMobilePage}
+            />
+          </div>
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 12, marginTop: 8 }}>
+            Tổng {data.length} tài sản
+          </div>
+        </div>
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="taisanId"
+          loading={loading}
+          scroll={{ x: 'max-content' }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} tài sản`,
+          }}
+        />
+      )}
 
       <Modal
         title={
@@ -405,7 +548,7 @@ const TaiSan = () => {
           setIsModalOpen(false)
           form.resetFields()
         }}
-        width={800}
+        width={isMobile ? '100%' : 800}
         footer={null}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -463,12 +606,12 @@ const TaiSan = () => {
             <TextArea rows={3} placeholder="Nhập thông số kỹ thuật" />
           </Form.Item>
 
-          <Space style={{ width: '100%' }} size="large">
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : 24 }}>
             <Form.Item
-              name="ngaynhap"
-              label="Ngày nhập"
-              rules={[{ required: true, message: 'Vui lòng chọn ngày nhập' }]}
-              style={{ width: 200 }}
+              name="ngaymua"
+              label="Ngày mua"
+              rules={[{ required: true, message: 'Vui lòng chọn ngày mua' }]}
+              style={{ width: isMobile ? '100%' : 200 }}
             >
               <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
             </Form.Item>
@@ -489,7 +632,42 @@ const TaiSan = () => {
                 placeholder="Nhập giá trị"
               />
             </Form.Item>
-          </Space>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : 24 }}>
+            <Form.Item
+              name="thoigianSudung"
+              label="Thời gian sử dụng (năm)"
+              rules={[
+                { required: true, message: 'Vui lòng nhập thời gian sử dụng' },
+                { type: 'number', min: 1, message: 'Thời gian sử dụng phải lớn hơn 0' },
+              ]}
+              style={{ width: isMobile ? '100%' : 200 }}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                min={1}
+                placeholder="Nhập số năm"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="tileThanhLy"
+              label="Tỷ lệ thanh lý (%)"
+              rules={[
+                { required: true, message: 'Vui lòng nhập tỷ lệ thanh lý' },
+                { type: 'number', min: 0, max: 100, message: 'Tỷ lệ thanh lý từ 0-100%' },
+              ]}
+              style={{ flex: 1 }}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                max={100}
+                placeholder="Nhập tỷ lệ %"
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="trangthaitaisanId"

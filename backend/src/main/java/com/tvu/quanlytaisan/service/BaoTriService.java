@@ -8,6 +8,7 @@ import com.tvu.quanlytaisan.entity.BaoTri;
 import com.tvu.quanlytaisan.entity.NguoiDung;
 import com.tvu.quanlytaisan.entity.TaiSan;
 import com.tvu.quanlytaisan.enums.TrangThaiXuLy;
+import com.tvu.quanlytaisan.exception.BadRequestException;
 import com.tvu.quanlytaisan.exception.ResourceNotFoundException;
 import com.tvu.quanlytaisan.repository.BaoTriRepository;
 import com.tvu.quanlytaisan.repository.NguoiDungRepository;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,9 +84,56 @@ public class BaoTriService {
         baoTri.setMotahuhong(request.getMotahuhong());
         baoTri.setTrangthaixuly(TrangThaiXuLy.CHOXULY);
         baoTri.setChiphi(request.getChiphi() != null ? request.getChiphi() : BigDecimal.ZERO);
+        baoTri.setNgaybaotritieptheo(request.getNgaybaotritieptheo());
         
         BaoTri saved = baoTriRepository.save(baoTri);
         return mapToResponse(saved);
+    }
+    
+    @Transactional
+    public List<BaoTriResponse> createBaoTriBatch(List<Long> taisanIds, BaoTriRequest commonData, Long nguoibaoId) {
+        // Validate batch size
+        if (taisanIds == null || taisanIds.isEmpty()) {
+            throw new BadRequestException("Danh sách tài sản không được rỗng");
+        }
+        
+        if (taisanIds.size() > 100) {
+            throw new BadRequestException("Vượt quá giới hạn 100 tài sản");
+        }
+        
+        // Validate all taisanIds exist
+        for (Long taisanId : taisanIds) {
+            if (!taiSanRepository.existsById(taisanId)) {
+                throw new ResourceNotFoundException("Tài sản", "id", taisanId);
+            }
+        }
+        
+        // Load nguoi bao
+        NguoiDung nguoibao = nguoiDungRepository.findById(nguoibaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", nguoibaoId));
+        
+        // Create BaoTri entities for each taisanId
+        List<BaoTriResponse> responses = new ArrayList<>();
+        
+        for (Long taisanId : taisanIds) {
+            TaiSan taiSan = taiSanRepository.findById(taisanId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Tài sản", "id", taisanId));
+            
+            BaoTri baoTri = new BaoTri();
+            baoTri.setTaisan(taiSan);
+            baoTri.setLoaibaotri(commonData.getLoaibaotri());
+            baoTri.setNguoibao(nguoibao);
+            baoTri.setNgaybao(commonData.getNgaybao());
+            baoTri.setMotahuhong(commonData.getMotahuhong());
+            baoTri.setTrangthaixuly(TrangThaiXuLy.CHOXULY);
+            baoTri.setChiphi(commonData.getChiphi() != null ? commonData.getChiphi() : BigDecimal.ZERO);
+            baoTri.setNgaybaotritieptheo(commonData.getNgaybaotritieptheo());
+            
+            BaoTri saved = baoTriRepository.save(baoTri);
+            responses.add(mapToResponse(saved));
+        }
+        
+        return responses;
     }
     
     @Transactional

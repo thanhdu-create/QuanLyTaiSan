@@ -98,7 +98,7 @@ const TaiSanForm = () => {
             tentaisan: data.tentaisan,
             loaitaisanId: data.loaitaisanId,
             thongsokythuat: data.thongsokythuat,
-            ngaynhap: data.ngaynhap ? dayjs(data.ngaynhap) : null,
+            ngaymua: data.ngaymua ? dayjs(data.ngaymua) : null,
             giatri: data.giatri,
             donviId: data.donviId,
             vitriId: data.vitriId,
@@ -141,7 +141,7 @@ const TaiSanForm = () => {
       setLoading(true)
       const payload = {
         ...values,
-        ngaynhap: values.ngaynhap ? values.ngaynhap.format('YYYY-MM-DD') : null,
+        ngaymua: values.ngaymua ? values.ngaymua.format('YYYY-MM-DD') : null,
       }
       
       // Remove donviId vì backend không cần field này
@@ -262,7 +262,7 @@ const TaiSanForm = () => {
 
         <Form.Item
           label="Ngày nhập"
-          name="ngaynhap"
+          name="ngaymua"
           rules={[{ required: true, message: 'Vui lòng chọn ngày nhập' }]}
         >
           <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />

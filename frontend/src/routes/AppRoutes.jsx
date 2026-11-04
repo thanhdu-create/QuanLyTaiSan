@@ -11,9 +11,7 @@ import TaiSanForm from '../pages/taisan/TaiSanForm'
 import QuetQR from '../pages/quetqr/QuetQR'
 import LuanChuyen from '../pages/luanchuyen/LuanChuyen'
 import KiemKe from '../pages/kiemke/KiemKe'
-import DanhMuc from '../pages/danhmuc/DanhMuc'
 import NguoiDung from '../pages/nguoidung/NguoiDung'
-import TestPage from '../pages/test/TestPage'
 import LoaiTaiSan from '../pages/admin/LoaiTaiSan'
 import TaiSan from '../pages/admin/TaiSan'
 import DonViViTri from '../pages/admin/DonViViTri'
@@ -26,23 +24,21 @@ const AppRoutes = () => {
       
       <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
         <Route index element={<Dashboard />} />
-        <Route path="test" element={<TestPage />} />
         <Route path="taisan" element={<TaiSanList />} />
         <Route path="assets/:id" element={<TaiSanDetail />} />
         <Route path="quetqr" element={<QuetQR />} />
         
-        <Route path="taisan/them" element={<AdminRoute><TaiSanForm /></AdminRoute>} />
-        <Route path="taisan/:id/sua" element={<AdminRoute><TaiSanForm /></AdminRoute>} />
-        <Route path="luanchuyen" element={<AdminRoute><LuanChuyen /></AdminRoute>} />
-        <Route path="kiemke" element={<AdminRoute><KiemKe /></AdminRoute>} />
-        <Route path="danhmuc" element={<AdminRoute><DanhMuc /></AdminRoute>} />
+        <Route path="taisan/them" element={<AdminRoute permission="TAISAN"><TaiSanForm /></AdminRoute>} />
+        <Route path="taisan/:id/sua" element={<AdminRoute permission="TAISAN"><TaiSanForm /></AdminRoute>} />
+        <Route path="luanchuyen" element={<AdminRoute permission="LUANCHUYEN"><LuanChuyen /></AdminRoute>} />
+        <Route path="kiemke" element={<AdminRoute permission="KIEMKE"><KiemKe /></AdminRoute>} />
         <Route path="nguoidung" element={<AdminRoute><NguoiDung /></AdminRoute>} />
         
         {/* Admin pages */}
-        <Route path="admin/loai-tai-san" element={<AdminRoute><LoaiTaiSan /></AdminRoute>} />
-        <Route path="admin/tai-san" element={<AdminRoute><TaiSan /></AdminRoute>} />
-        <Route path="admin/don-vi-vi-tri" element={<AdminRoute><DonViViTri /></AdminRoute>} />
-        <Route path="admin/bao-tri" element={<AdminRoute><BaoTri /></AdminRoute>} />
+        <Route path="admin/loai-tai-san" element={<AdminRoute permission="LOAITAISAN"><LoaiTaiSan /></AdminRoute>} />
+        <Route path="admin/tai-san" element={<AdminRoute permission="TAISAN"><TaiSan /></AdminRoute>} />
+        <Route path="admin/don-vi-vi-tri" element={<AdminRoute permission="DONVIVITRI"><DonViViTri /></AdminRoute>} />
+        <Route path="admin/bao-tri" element={<AdminRoute permission="BAOTRI"><BaoTri /></AdminRoute>} />
       </Route>
     </Routes>
   )

@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ public class TaiSanService {
     private final ViTriRepository viTriRepository;
     private final TrangThaiTaiSanRepository trangThaiTaiSanRepository;
     private final NguoiDungRepository nguoiDungRepository;
+    private final DonViRepository donViRepository;
     private final QRCodeService qrCodeService;
     
     @Transactional(readOnly = true)
@@ -65,6 +68,18 @@ public class TaiSanService {
     @Transactional(readOnly = true)
     public List<TaiSanResponse> getTaiSanByLoai(Integer loaitaisanId) {
         return taiSanRepository.findByLoaiTaiSan(loaitaisanId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
+    public List<TaiSanResponse> getTaiSanByDonVi(Integer donviId) {
+        // Verify that the unit exists
+        donViRepository.findById(donviId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị"));
+        
+        // Get all assets for the unit
+        return taiSanRepository.findByDonViId(donviId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -117,8 +132,10 @@ public class TaiSanService {
         entity.setMataisan(request.getMataisan());
         entity.setTentaisan(request.getTentaisan());
         entity.setThongsokythuat(request.getThongsokythuat());
-        entity.setNgaynhap(request.getNgaynhap());
+        entity.setNgaymua(request.getNgaymua());
         entity.setGiatri(request.getGiatri());
+        entity.setThoigianSudung(request.getThoigianSudung());
+        entity.setTileThanhLy(request.getTileThanhLy());
         
         // Load loai tai san
         LoaiTaiSan loaiTaiSan = loaiTaiSanRepository.findById(request.getLoaitaisanId())
@@ -168,6 +185,9 @@ public class TaiSanService {
             e.printStackTrace();
         }
         
+        // Tính toán khấu hao
+        KhauHaoInfo khauHao = calculateKhauHao(entity);
+        
         return TaiSanResponse.builder()
                 .taisanId(entity.getTaisanId())
                 .mataisan(entity.getMataisan())
@@ -175,19 +195,138 @@ public class TaiSanService {
                 .loaitaisanId(entity.getLoaitaisan().getLoaitaisanId())
                 .tenloai(entity.getLoaitaisan().getTenloai())
                 .thongsokythuat(entity.getThongsokythuat())
-                .ngaynhap(entity.getNgaynhap())
+                .ngaymua(entity.getNgaymua())
                 .giatri(entity.getGiatri())
+                .thoigianSudung(entity.getThoigianSudung())
+                .tileThanhLy(entity.getTileThanhLy())
+                .soNgayDaSuDung(khauHao.soNgayDaSuDung)
+                .soNamDaSuDung(khauHao.soNamDaSuDung)
+                .giaTriThanhLy(khauHao.giaTriThanhLy)
+                .khauHaoNam(khauHao.khauHaoNam)
+                .tongKhauHao(khauHao.tongKhauHao)
+                .tyleKhauHao(khauHao.tyleKhauHao)
+                .giaTriConLai(khauHao.giaTriConLai)
                 .vitriId(entity.getVitri() != null ? entity.getVitri().getVitriId() : null)
                 .tenvitri(entity.getVitri() != null ? entity.getVitri().getTenvitri() : null)
                 .donviId(entity.getVitri() != null && entity.getVitri().getDonvi() != null ? entity.getVitri().getDonvi().getDonviId() : null)
                 .tendonvi(entity.getVitri() != null && entity.getVitri().getDonvi() != null ? entity.getVitri().getDonvi().getTendonvi() : null)
                 .trangthaitaisanId(entity.getTrangthaitaisan().getTrangthaitaisanId())
+                .matrangthai(entity.getTrangthaitaisan().getMatrangthai())
                 .tentrangthai(entity.getTrangthaitaisan().getTentrangthai())
                 .nguoisudungId(entity.getNguoisudung() != null ? entity.getNguoisudung().getNguoidungId() : null)
                 .tennguoisudung(entity.getNguoisudung() != null ? entity.getNguoisudung().getHoten() : null)
                 .daxoa(entity.getDaxoa())
-                .ngaytao(entity.getNgaytao())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .qrCode(qrCode)
                 .build();
+    }
+    
+    /**
+     * Tính toán thông tin khấu hao theo phương pháp đường thẳng
+     */
+    private KhauHaoInfo calculateKhauHao(TaiSan entity) {
+        KhauHaoInfo info = new KhauHaoInfo();
+        
+        try {
+            LocalDate ngaymua = entity.getNgaymua();
+            
+            // Nếu ngày mua là null, trả về giá trị mặc định
+            if (ngaymua == null) {
+                System.err.println("⚠️ Ngày mua is null for asset: " + entity.getMataisan());
+                info.soNgayDaSuDung = 0L;
+                info.soNamDaSuDung = BigDecimal.ZERO;
+                info.giaTriThanhLy = BigDecimal.ZERO;
+                info.khauHaoNam = BigDecimal.ZERO;
+                info.tongKhauHao = BigDecimal.ZERO;
+                info.tyleKhauHao = BigDecimal.ZERO;
+                info.giaTriConLai = entity.getGiatri();
+                return info;
+            }
+            
+            LocalDate now = LocalDate.now();
+            BigDecimal giatri = entity.getGiatri() != null ? entity.getGiatri() : BigDecimal.ZERO;
+            Integer thoigianSudung = entity.getThoigianSudung() != null ? entity.getThoigianSudung() : 5;
+            BigDecimal tileThanhLy = entity.getTileThanhLy() != null ? entity.getTileThanhLy() : new BigDecimal("10.00");
+            
+            System.out.println("🔍 Calculating depreciation for: " + entity.getMataisan());
+            System.out.println("   - Ngày mua: " + ngaymua);
+            System.out.println("   - Giá trị: " + giatri);
+            System.out.println("   - Thời gian sử dụng: " + thoigianSudung + " năm");
+            System.out.println("   - Tỷ lệ thanh lý: " + tileThanhLy + "%");
+            
+            // Tính số ngày đã sử dụng
+            long soNgay = java.time.temporal.ChronoUnit.DAYS.between(ngaymua, now);
+            info.soNgayDaSuDung = soNgay;
+            System.out.println("   - Số ngày đã sử dụng: " + soNgay);
+            
+            // Tính số năm đã sử dụng (1 năm = 365.25 ngày)
+            BigDecimal soNam = new BigDecimal(soNgay).divide(new BigDecimal("365.25"), 2, BigDecimal.ROUND_HALF_UP);
+            info.soNamDaSuDung = soNam;
+            System.out.println("   - Số năm đã sử dụng: " + soNam);
+            
+            // Tính giá trị thanh lý (% của nguyên giá)
+            BigDecimal giaTriThanhLy = giatri.multiply(tileThanhLy).divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
+            info.giaTriThanhLy = giaTriThanhLy;
+            System.out.println("   - Giá trị thanh lý: " + giaTriThanhLy);
+            
+            // Tính khấu hao hàng năm = (Nguyên giá - Giá trị thanh lý) / Thời gian sử dụng
+            BigDecimal khauHaoNam = giatri.subtract(giaTriThanhLy)
+                    .divide(new BigDecimal(thoigianSudung), 2, BigDecimal.ROUND_HALF_UP);
+            info.khauHaoNam = khauHaoNam;
+            System.out.println("   - Khấu hao/năm: " + khauHaoNam);
+            
+            // Tính tổng khấu hao = Khấu hao/năm × Số năm đã sử dụng
+            BigDecimal tongKhauHao = khauHaoNam.multiply(soNam).setScale(2, BigDecimal.ROUND_HALF_UP);
+            info.tongKhauHao = tongKhauHao;
+            System.out.println("   - Tổng khấu hao: " + tongKhauHao);
+            
+            // Tính giá trị còn lại = Nguyên giá - Tổng khấu hao (không thấp hơn giá trị thanh lý)
+            BigDecimal giaTriConLai = giatri.subtract(tongKhauHao);
+            if (giaTriConLai.compareTo(giaTriThanhLy) < 0) {
+                giaTriConLai = giaTriThanhLy;
+            }
+            info.giaTriConLai = giaTriConLai;
+            System.out.println("   - Giá trị còn lại: " + giaTriConLai);
+            
+            // Tính tỷ lệ khấu hao (%) = (Số năm đã sử dụng / Thời gian sử dụng) × 100
+            BigDecimal tyleKhauHao = soNam.divide(new BigDecimal(thoigianSudung), 4, BigDecimal.ROUND_HALF_UP)
+                    .multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
+            if (tyleKhauHao.compareTo(new BigDecimal("100")) > 0) {
+                tyleKhauHao = new BigDecimal("100.00");
+            }
+            info.tyleKhauHao = tyleKhauHao;
+            System.out.println("   - Tỷ lệ khấu hao: " + tyleKhauHao + "%");
+            System.out.println("✅ Depreciation calculation completed for: " + entity.getMataisan());
+            
+        } catch (Exception e) {
+            // Nếu có lỗi, trả về giá trị mặc định
+            System.err.println("❌ Error calculating depreciation for: " + entity.getMataisan());
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            
+            info.soNgayDaSuDung = 0L;
+            info.soNamDaSuDung = BigDecimal.ZERO;
+            info.giaTriThanhLy = BigDecimal.ZERO;
+            info.khauHaoNam = BigDecimal.ZERO;
+            info.tongKhauHao = BigDecimal.ZERO;
+            info.tyleKhauHao = BigDecimal.ZERO;
+            info.giaTriConLai = entity.getGiatri() != null ? entity.getGiatri() : BigDecimal.ZERO;
+        }
+        
+        return info;
+    }
+    
+    /**
+     * Inner class chứa thông tin khấu hao tính toán
+     */
+    private static class KhauHaoInfo {
+        Long soNgayDaSuDung;
+        BigDecimal soNamDaSuDung;
+        BigDecimal giaTriThanhLy;
+        BigDecimal khauHaoNam;
+        BigDecimal tongKhauHao;
+        BigDecimal tyleKhauHao;
+        BigDecimal giaTriConLai;
     }
 }

@@ -5,6 +5,7 @@ import com.tvu.quanlytaisan.dto.request.LoginRequest;
 import com.tvu.quanlytaisan.dto.response.LoginResponse;
 import com.tvu.quanlytaisan.dto.response.UserInfoResponse;
 import com.tvu.quanlytaisan.entity.NguoiDung;
+import com.tvu.quanlytaisan.enums.QuyenHan;
 import com.tvu.quanlytaisan.exception.BadRequestException;
 import com.tvu.quanlytaisan.exception.ResourceNotFoundException;
 import com.tvu.quanlytaisan.exception.UnauthorizedException;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserDetailsService userDetailsService;
     
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
@@ -47,12 +50,8 @@ public class AuthService {
             throw new UnauthorizedException("Tài khoản đã bị khóa");
         }
         
-        // Generate token
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(nguoiDung.getTendangnhap())
-                .password(nguoiDung.getMatkhaumahoa())
-                .authorities("ROLE_" + nguoiDung.getVaitro().name())
-                .build();
+        // Generate token - dùng UserDetailsService để token mang đủ ROLE_ + PERM_
+        UserDetails userDetails = userDetailsService.loadUserByUsername(nguoiDung.getTendangnhap());
         
         String token = jwtService.generateToken(userDetails);
         
@@ -64,6 +63,7 @@ public class AuthService {
                 .hoten(nguoiDung.getHoten())
                 .email(nguoiDung.getEmail())
                 .vaitro(nguoiDung.getVaitro())
+                .quyenhan(QuyenHan.parse(nguoiDung.getQuyenhan()))
                 .build();
     }
     
@@ -81,6 +81,7 @@ public class AuthService {
                 .vaitro(nguoiDung.getVaitro())
                 .tenDonVi(nguoiDung.getDonvi() != null ? nguoiDung.getDonvi().getTendonvi() : null)
                 .hoatdong(nguoiDung.getHoatdong())
+                .quyenhan(QuyenHan.parse(nguoiDung.getQuyenhan()))
                 .build();
     }
     

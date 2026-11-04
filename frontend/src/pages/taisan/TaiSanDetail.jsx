@@ -58,7 +58,7 @@ const TaiSanDetail = () => {
             {formatCurrency(taisan.giatri)}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày nhập">
-            {formatDate(taisan.ngaynhap)}
+            {formatDate(taisan.ngaymua)}
           </Descriptions.Item>
           <Descriptions.Item label="Thông số kỹ thuật" span={2}>
             {taisan.thongsokythuat || 'Không có'}

@@ -36,11 +36,17 @@ public class TaiSan extends BaseEntity {
     @Column(name = "thongsokythuat", columnDefinition = "TEXT")
     private String thongsokythuat;
     
-    @Column(name = "ngaynhap", nullable = false)
-    private LocalDate ngaynhap;
+    @Column(name = "ngaymua", nullable = false)
+    private LocalDate ngaymua;
     
     @Column(name = "giatri", precision = 15, scale = 2, nullable = false)
     private BigDecimal giatri = BigDecimal.ZERO;
+    
+    @Column(name = "thoigian_sudung")
+    private Integer thoigianSudung = 5;
+    
+    @Column(name = "tile_thanhly", precision = 5, scale = 2)
+    private BigDecimal tileThanhLy = new BigDecimal("10.00");
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vitri_id")
@@ -57,11 +63,5 @@ public class TaiSan extends BaseEntity {
     @Column(name = "daxoa", nullable = false)
     private Boolean daxoa = false;
     
-    @Column(name = "ngaytao", nullable = false, updatable = false)
-    private LocalDateTime ngaytao = LocalDateTime.now();
-    
-    @PrePersist
-    protected void onCreate() {
-        ngaytao = LocalDateTime.now();
-    }
+    // Removed ngaytao field - using created_at from BaseEntity instead
 }

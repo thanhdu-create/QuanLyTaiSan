@@ -27,7 +27,7 @@ public class KiemKeController {
     private final NguoiDungRepository nguoiDungRepository;
     
     @PostMapping("/dot-kiem-ke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_KIEMKE')")
     public ResponseEntity<ApiResponse<DotKiemKeResponse>> createDotKiemKe(
             @RequestBody DotKiemKeRequest request,
             Authentication authentication) {
@@ -74,7 +74,7 @@ public class KiemKeController {
     }
     
     @PutMapping("/dot-kiem-ke/{id}/dong")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_KIEMKE')")
     public ResponseEntity<ApiResponse<DotKiemKeResponse>> dongDotKiemKe(@PathVariable Long id) {
         DotKiemKeResponse response = kiemKeService.dongDotKiemKe(id);
         return ResponseEntity.ok(ApiResponse.success(response));

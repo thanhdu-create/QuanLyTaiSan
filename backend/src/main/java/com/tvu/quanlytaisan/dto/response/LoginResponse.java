@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,4 +22,5 @@ public class LoginResponse {
     private String hoten;
     private String email;
     private VaiTro vaitro;
+    private List<String> quyenhan;
 }

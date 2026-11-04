@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Space, message, Popconfirm, Card } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Table, Button, Modal, Form, Input, Space, message, Card, Dropdown, Grid, Empty, Pagination, Spin } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, EllipsisOutlined } from '@ant-design/icons'
 import loaiTaiSanApi from '../../api/loaiTaiSanApi'
 import dayjs from 'dayjs'
 
@@ -10,6 +10,15 @@ const LoaiTaiSan = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form] = Form.useForm()
+
+  const screens = Grid.useBreakpoint()
+  // Phone: dưới breakpoint md (768px); tablet/desktop dùng bảng
+  const isMobile = screens.md === false
+  const [mobilePage, setMobilePage] = useState(1)
+  const MOBILE_PAGE_SIZE = 10
+  const mobileTotalPages = Math.max(1, Math.ceil(data.length / MOBILE_PAGE_SIZE))
+  const safeMobilePage = Math.min(mobilePage, mobileTotalPages)
+  const mobileData = data.slice((safeMobilePage - 1) * MOBILE_PAGE_SIZE, safeMobilePage * MOBILE_PAGE_SIZE)
 
   useEffect(() => {
     fetchData()
@@ -68,6 +77,34 @@ const LoaiTaiSan = () => {
     }
   }
 
+  const handleConfirmDelete = (record) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa loại tài sản này?',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: () => handleDelete(record.loaitaisanId),
+    })
+  }
+
+  const actionMenuItems = (record) => [
+    {
+      key: 'edit',
+      icon: <EditOutlined />,
+      label: 'Sửa',
+      onClick: () => handleEdit(record),
+    },
+    { type: 'divider' },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      label: 'Xóa',
+      danger: true,
+      onClick: () => handleConfirmDelete(record),
+    },
+  ]
+
   const columns = [
     {
       title: 'ID',
@@ -97,33 +134,17 @@ const LoaiTaiSan = () => {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 150,
+      width: 80,
+      fixed: 'right',
+      align: 'center',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xác nhận xóa"
-            description="Bạn có chắc chắn muốn xóa loại tài sản này?"
-            onConfirm={() => handleDelete(record.loaitaisanId)}
-            okText="Xóa"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-            >
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
+        <Dropdown
+          menu={{ items: actionMenuItems(record) }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <Button type="text" icon={<EllipsisOutlined />} />
+        </Dropdown>
       ),
     },
   ]
@@ -131,7 +152,7 @@ const LoaiTaiSan = () => {
   return (
     <Card
       title="Quản lý Loại Tài Sản"
-      extra={
+      extra={!isMobile && (
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -139,19 +160,76 @@ const LoaiTaiSan = () => {
         >
           Thêm loại tài sản
         </Button>
-      }
+      )}
+      styles={{ body: { padding: isMobile ? 12 : 24 } }}
     >
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="loaitaisanId"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng ${total} loại tài sản`,
-        }}
-      />
+      {isMobile && (
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} block style={{ marginBottom: 12 }}>
+          Thêm loại tài sản
+        </Button>
+      )}
+
+      {isMobile ? (
+        <div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <Spin />
+            </div>
+          ) : data.length === 0 ? (
+            <Empty description="Không có loại tài sản" />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {mobileData.map((record) => (
+                <Card key={record.loaitaisanId} size="small">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 500 }}>{record.tenloai}</div>
+                      <div style={{ fontSize: 12, color: '#888' }}>ID: {record.loaitaisanId}</div>
+                    </div>
+                    <Dropdown
+                      menu={{ items: actionMenuItems(record) }}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button type="text" icon={<EllipsisOutlined />} />
+                    </Dropdown>
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#888' }}>
+                    <div>Ngày tạo: {record.createdAt ? dayjs(record.createdAt).format('DD/MM/YYYY HH:mm') : '—'}</div>
+                    <div>Ngày cập nhật: {record.updatedAt ? dayjs(record.updatedAt).format('DD/MM/YYYY HH:mm') : '—'}</div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+            <Pagination
+              size="small"
+              simple
+              current={safeMobilePage}
+              pageSize={MOBILE_PAGE_SIZE}
+              total={data.length}
+              onChange={setMobilePage}
+            />
+          </div>
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 12, marginTop: 8 }}>
+            Tổng {data.length} loại tài sản
+          </div>
+        </div>
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="loaitaisanId"
+          loading={loading}
+          scroll={{ x: 'max-content' }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} loại tài sản`,
+          }}
+        />
+      )}
 
       <Modal
         title={editingId ? 'Cập nhật loại tài sản' : 'Thêm loại tài sản'}
@@ -160,6 +238,7 @@ const LoaiTaiSan = () => {
           setIsModalOpen(false)
           form.resetFields()
         }}
+        width={isMobile ? '100%' : 520}
         footer={null}
       >
         <Form

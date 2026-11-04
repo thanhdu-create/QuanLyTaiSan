@@ -42,4 +42,8 @@ public class NguoiDung extends BaseEntity {
     
     @Column(name = "hoatdong", nullable = false)
     private Boolean hoatdong = true;
+
+    // CSV các mã trang admin được cấp quyền, VD: "LUANCHUYEN,BAOTRI"
+    @Column(name = "quyenhan", length = 500)
+    private String quyenhan;
 }

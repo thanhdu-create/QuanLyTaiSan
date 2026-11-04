@@ -59,9 +59,7 @@ frontend/
 │   │   ├── taisan/       # Quản lý tài sản
 │   │   ├── quetqr/       # Quét QR
 │   │   ├── luanchuyen/   # Luân chuyển
-│   │   ├── baotri/       # Bảo trì
 │   │   ├── kiemke/       # Kiểm kê
-│   │   ├── danhmuc/      # Danh mục
 │   │   └── nguoidung/    # Người dùng
 │   ├── routes/           # Route configuration
 │   ├── utils/            # Utilities
@@ -104,7 +102,6 @@ frontend/
 - ✅ luanchuyenApi - Bàn giao, thu hồi, điều chuyển
 - ✅ baotriApi - Báo hỏng, sửa chữa
 - ✅ kiemkeApi - Kiểm kê
-- ✅ danhmucApi - Đơn vị, vị trí, loại tài sản
 - ✅ nguoidungApi - Quản lý người dùng
 - ✅ thongkeApi - Dashboard statistics
 

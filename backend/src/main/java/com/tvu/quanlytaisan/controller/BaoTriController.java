@@ -1,5 +1,6 @@
 package com.tvu.quanlytaisan.controller;
 
+import com.tvu.quanlytaisan.dto.request.BaoTriBatchRequest;
 import com.tvu.quanlytaisan.dto.request.BaoTriRequest;
 import com.tvu.quanlytaisan.dto.request.BaoTriUpdateRequest;
 import com.tvu.quanlytaisan.dto.response.ApiResponse;
@@ -29,21 +30,21 @@ public class BaoTriController {
     private final NguoiDungRepository nguoiDungRepository;
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> getAllBaoTri() {
         List<BaoTriResponse> response = baoTriService.getAllBaoTri();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<BaoTriResponse>> getBaoTriById(@PathVariable Long id) {
         BaoTriResponse response = baoTriService.getBaoTriById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
     
     @GetMapping("/trang-thai/{trangthaixuly}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> getBaoTriByTrangThai(
             @PathVariable TrangThaiXuLy trangthaixuly) {
         List<BaoTriResponse> response = baoTriService.getBaoTriByTrangThai(trangthaixuly);
@@ -51,7 +52,7 @@ public class BaoTriController {
     }
     
     @GetMapping("/tai-san/{taisanId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> getBaoTriByTaiSan(
             @PathVariable Long taisanId) {
         List<BaoTriResponse> response = baoTriService.getBaoTriByTaiSan(taisanId);
@@ -59,7 +60,7 @@ public class BaoTriController {
     }
     
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> searchBaoTri(
             @RequestParam String keyword) {
         List<BaoTriResponse> response = baoTriService.searchBaoTri(keyword);
@@ -67,7 +68,7 @@ public class BaoTriController {
     }
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<BaoTriResponse>> createBaoTri(
             @Valid @RequestBody BaoTriRequest request,
             Authentication authentication) {
@@ -77,8 +78,34 @@ public class BaoTriController {
                 .body(ApiResponse.success("Tạo phiếu bảo trì thành công", response));
     }
     
+    @PostMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
+    public ResponseEntity<ApiResponse<List<BaoTriResponse>>> createBaoTriBatch(
+            @Valid @RequestBody BaoTriBatchRequest request,
+            Authentication authentication) {
+        Long nguoibaoId = getNguoidungIdFromAuthentication(authentication);
+        
+        // Convert BaoTriBatchRequest to BaoTriRequest for common data
+        BaoTriRequest commonData = new BaoTriRequest();
+        commonData.setLoaibaotri(request.getLoaibaotri());
+        commonData.setNgaybao(request.getNgaybao());
+        commonData.setMotahuhong(request.getMotahuhong());
+        commonData.setChiphi(request.getChiphi());
+        commonData.setNgaybaotritieptheo(request.getNgaybaotritieptheo());
+        
+        List<BaoTriResponse> responses = baoTriService.createBaoTriBatch(
+                request.getTaisanIds(), 
+                commonData, 
+                nguoibaoId
+        );
+        
+        String successMessage = String.format("Đã tạo %d phiếu bảo trì thành công", responses.size());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(successMessage, responses));
+    }
+    
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<BaoTriResponse>> updateBaoTri(
             @PathVariable Long id,
             @Valid @RequestBody BaoTriUpdateRequest request) {
@@ -87,21 +114,21 @@ public class BaoTriController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<Void>> deleteBaoTri(@PathVariable Long id) {
         baoTriService.deleteBaoTri(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa phiếu bảo trì thành công"));
     }
     
     @GetMapping("/thong-ke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<BaoTriThongKeResponse>> getThongKe() {
         BaoTriThongKeResponse response = baoTriService.getThongKe();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
     
     @GetMapping("/can-bao-tri")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_BAOTRI')")
     public ResponseEntity<ApiResponse<List<BaoTriResponse>>> getTaiSanCanBaoTri() {
         List<BaoTriResponse> response = baoTriService.getTaiSanCanBaoTri();
         return ResponseEntity.ok(ApiResponse.success(response));

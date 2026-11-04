@@ -66,7 +66,7 @@ public class ViTriController {
     }
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<ViTri>> createViTri(@RequestBody ViTriRequest request) {
         // Validate
@@ -102,7 +102,7 @@ public class ViTriController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<ViTri>> updateViTri(@PathVariable Integer id, @RequestBody ViTriRequest request) {
         ViTri existingViTri = viTriRepository.findById(id)
@@ -141,7 +141,7 @@ public class ViTriController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<Void>> deleteViTri(@PathVariable Integer id) {
         ViTri viTri = viTriRepository.findById(id)

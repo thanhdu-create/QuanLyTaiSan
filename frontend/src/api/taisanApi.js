@@ -24,6 +24,9 @@ const taiSanApi = {
   
   // Xoa tai san
   delete: (id) => axiosClient.delete(`/tai-san/${id}`),
+  
+  // Lay tai san theo don vi
+  getByDonVi: (donviId) => axiosClient.get(`/tai-san/by-don-vi/${donviId}`),
 }
 
 export default taiSanApi

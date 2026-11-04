@@ -37,7 +37,7 @@ public class DonViController {
     }
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<DonVi>> createDonVi(@RequestBody DonViRequest request) {
         // Validate
@@ -70,7 +70,7 @@ public class DonViController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<DonVi>> updateDonVi(@PathVariable Integer id, @RequestBody DonViRequest request) {
         DonVi existingDonVi = donViRepository.findById(id)
@@ -108,7 +108,7 @@ public class DonViController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_DONVIVITRI')")
     @Transactional
     public ResponseEntity<ApiResponse<Void>> deleteDonVi(@PathVariable Integer id) {
         DonVi donVi = donViRepository.findById(id)
