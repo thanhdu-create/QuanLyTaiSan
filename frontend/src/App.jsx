@@ -1,4 +1,4 @@
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import viVN from 'antd/locale/vi_VN'
 import { AuthProvider } from './context/AuthContext'
@@ -11,11 +11,11 @@ dayjs.locale('vi')
 function App() {
   return (
     <ConfigProvider locale={viVN}>
-      <BrowserRouter>
+      <HashRouter>
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
-      </BrowserRouter>
+      </HashRouter>
     </ConfigProvider>
   )
 }

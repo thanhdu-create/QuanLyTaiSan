@@ -27,7 +27,8 @@ public class CorsConfig implements WebMvcConfigurer {
             "http://localhost:3000",      // React dev server (backup)
             "http://127.0.0.1:5173",
             "http://127.0.0.1:3000",
-            "http://192.168.2.11:5173"    // Network access (mobile)
+            "http://192.168.2.11:5173",   // Network access (mobile)
+            "https://thanhdu-create.github.io" // Frontend trên GitHub Pages
         ));
         
         // Cho phép các HTTP methods

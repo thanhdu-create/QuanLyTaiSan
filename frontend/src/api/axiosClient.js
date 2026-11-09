@@ -15,7 +15,8 @@ axiosClient.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/dangnhap'
+      // HashRouter: điều hướng kèm base để đúng đường dẫn GitHub Pages
+      window.location.href = `${import.meta.env.BASE_URL}#/dangnhap`
     }
     return Promise.reject(err)
   }

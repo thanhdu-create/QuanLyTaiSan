@@ -36,7 +36,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token')
     setUser(null)
-    window.location.href = '/dangnhap'
+    // HashRouter: điều hướng kèm base để đúng đường dẫn GitHub Pages
+    window.location.href = `${import.meta.env.BASE_URL}#/dangnhap`
   }
 
   return (
