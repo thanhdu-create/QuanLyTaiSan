@@ -19,7 +19,7 @@ import {
   Spin,
 } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, QrcodeOutlined, DownloadOutlined, EllipsisOutlined } from '@ant-design/icons'
-import taiSanApi from '../../api/taiSanApi'
+import taiSanApi from '../../api/taisanApi'
 import loaiTaiSanApi from '../../api/loaiTaiSanApi'
 import donViApi from '../../api/donviApi'
 import viTriApi from '../../api/vitriApi'

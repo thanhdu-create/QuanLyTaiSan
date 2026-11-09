@@ -33,9 +33,9 @@ import {
   QrcodeOutlined,
   ToolOutlined,
 } from '@ant-design/icons'
-import baoTriApi from '../../api/baoTriApi'
-import taiSanApi from '../../api/taiSanApi'
-import donViApi from '../../api/donViApi'
+import baoTriApi from '../../api/baotriApi'
+import taiSanApi from '../../api/taisanApi'
+import donViApi from '../../api/donviApi'
 import dayjs from 'dayjs'
 import QRScannerModal from '../../components/QRScannerModal'
 
