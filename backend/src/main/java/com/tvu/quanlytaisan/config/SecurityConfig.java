@@ -37,8 +37,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Allow OPTIONS requests for CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Public endpoints
-                        .requestMatchers("/auth/**", "/error").permitAll()
+                        // Public endpoints (health check cho Render)
+                        .requestMatchers("/auth/**", "/health", "/error").permitAll()
                         // Admin-only endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // All other requests require authentication

@@ -1,42 +1,54 @@
 spring:
   application:
     name: quanlytaisan
-  
+
   # Active profile: local (mặc định) hoặc tidb (production)
   # Đổi sang tidb khi chạy: mvn spring-boot:run -Dspring-boot.run.profiles=tidb
   profiles:
     active: tidb
-    
+
   datasource:
-    url: jdbc:mysql://localhost:3306/quanlytaisanqr?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh
-    username: root
-    password: "" 
+    # Trên Render/TiDB: DB_URL trỏ cổng 4000 kèm sslMode=VERIFY_IDENTITY
+    url: ${DB_URL:jdbc:mysql://localhost:3306/quanlytaisanqr?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
+
   jpa:
     hibernate:
-      ddl-auto: none
+      # Lần đầu deploy: DDL_AUTO=update, sau khi đủ bảng đổi thành validate
+      ddl-auto: ${DDL_AUTO:none}
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
-    
+
   security:
     user:
       name: admin
       password: admin
-      
+
 server:
-  port: 8080
+  # Render cấp cổng qua biến PORT
+  port: ${PORT:8080}
   servlet:
     context-path: /api
-    
+
 # JWT Configuration
 jwt:
-  secret: quanlytaisanqr-secret-key-change-this-in-production-environment-12345678
-  expiration: 86400000
+  secret: ${JWT_SECRET:quanlytaisanqr-secret-key-change-this-in-production-environment-12345678}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Cấu hình riêng của ứng dụng (đọc từ biến môi trường khi deploy)
+app:
+  cors:
+    # Nhiều origin cách nhau bằng dấu phẩy, chỉ gồm tên miền, không có dấu / cuối
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://192.168.2.11:5173,https://thanhdu-create.github.io}
+  qr:
+    # Mã QR trỏ tới trang chi tiết tài sản, ví dụ https://TENBAN.github.io/TEN-REPO/#/assets/
+    base-url: "${QR_BASE_URL:http://localhost:5173/#/assets/}"
 
 # Logging
 logging:

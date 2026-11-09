@@ -92,7 +92,7 @@ public class TaiSanController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ApiResponse<String>> getQRCode(@PathVariable Long id) {
         TaiSanResponse taiSan = taiSanService.getTaiSanById(id);
-        String qrCodeBase64 = qrCodeService.generateQRCodeForTaiSan(taiSan.getMataisan());
+        String qrCodeBase64 = qrCodeService.generateQRCodeForTaiSan(taiSan.getTaisanId(), taiSan.getMataisan());
         return ResponseEntity.ok(ApiResponse.success(qrCodeBase64));
     }
 }

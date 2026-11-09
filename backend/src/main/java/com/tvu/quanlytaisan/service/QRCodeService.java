@@ -8,6 +8,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -23,6 +24,9 @@ import java.util.Map;
 public class QRCodeService {
     
     private static final int QR_CODE_SIZE = 300; // Kích thước QR code (pixels)
+    
+    @Value("${app.qr.base-url:}")
+    private String qrBaseUrl;
     
     /**
      * Tạo QR code dưới dạng base64 string
@@ -67,11 +71,22 @@ public class QRCodeService {
     }
     
     /**
-     * Tạo QR code cho tài sản
-     * @param mataisan Mã tài sản
+     * Tạo QR code cho tài sản.
+     * Nội dung QR là đường dẫn tới trang chi tiết tài sản (QR_BASE_URL + id),
+     * nhờ vậy quét bằng điện thoại sẽ mở đúng trang.
+     *
+     * @param taisanId Id tài sản
+     * @param mataisan Mã tài sản (dùng khi chưa cấu hình QR_BASE_URL)
      * @return Base64 string của QR code image
      */
-    public String generateQRCodeForTaiSan(String mataisan) {
-        return generateQRCodeBase64(mataisan);
+    public String generateQRCodeForTaiSan(Long taisanId, String mataisan) {
+        String baseUrl = qrBaseUrl != null ? qrBaseUrl.trim() : "";
+        if (baseUrl.isEmpty()) {
+            return generateQRCodeBase64(mataisan);
+        }
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/";
+        }
+        return generateQRCodeBase64(baseUrl + taisanId);
     }
 }

@@ -7,6 +7,7 @@ import com.tvu.quanlytaisan.exception.BadRequestException;
 import com.tvu.quanlytaisan.exception.ResourceNotFoundException;
 import com.tvu.quanlytaisan.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TaiSanService {
     
@@ -170,19 +172,10 @@ public class TaiSanService {
         // Tạo QR code cho tài sản
         String qrCode = null;
         try {
-            System.out.println("🔄 Generating QR Code for: " + entity.getMataisan());
-            qrCode = qrCodeService.generateQRCodeForTaiSan(entity.getMataisan());
-            
-            if (qrCode != null && !qrCode.isEmpty()) {
-                System.out.println("✅ QR Code generated successfully for: " + entity.getMataisan() + " (length: " + qrCode.length() + ")");
-            } else {
-                System.err.println("⚠️ QR Code is null or empty for: " + entity.getMataisan());
-            }
+            qrCode = qrCodeService.generateQRCodeForTaiSan(entity.getTaisanId(), entity.getMataisan());
         } catch (Exception e) {
             // Nếu lỗi tạo QR, không throw exception, chỉ log
-            System.err.println("❌ Error generating QR code for: " + entity.getMataisan());
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
+            log.warn("Không tạo được QR code cho tài sản {}: {}", entity.getMataisan(), e.getMessage());
         }
         
         // Tính toán khấu hao
