@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: quanlytaisan
+  
+  # Active profile: local (mặc định) hoặc tidb (production)
+  # Đổi sang tidb khi chạy: mvn spring-boot:run -Dspring-boot.run.profiles=tidb
+  profiles:
+    active: tidb
+    
+  datasource:
+    url: jdbc:mysql://localhost:3306/quanlytaisanqr?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh
+    username: root
+    password: "" 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+    
+  security:
+    user:
+      name: admin
+      password: admin
+      
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    
+# JWT Configuration
+jwt:
+  secret: quanlytaisanqr-secret-key-change-this-in-production-environment-12345678
+  expiration: 86400000
+
+# Logging
+logging:
+  level:
+    com.tvu.quanlytaisan: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

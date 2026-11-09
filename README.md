@@ -2,6 +2,12 @@
 
 Hệ thống quản lý tài sản toàn diện sử dụng mã QR để tra cứu, kiểm kê, bảo trì và luân chuyển tài sản. Hệ thống hỗ trợ quét QR bằng camera điện thoại, theo dõi lịch sử tài sản, quản lý bảo trì định kỳ và kiểm kê tài sản.
 
+##pas của tidb
+pass : 1ha5neG6WLI2o76W
+host : gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+port : 4000
+usernae : wvdpCa871TJs4DR.root
+
 ## 📋 Mục lục
 
 - [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)

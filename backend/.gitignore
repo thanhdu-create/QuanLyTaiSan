@@ -38,17 +38,23 @@ mvnw
 mvnw.cmd
 
 ### Application Config (QUAN TRỌNG - Không push file config có thông tin nhạy cảm)
-application.yml
+# Chặn tất cả file config có thể chứa password
 application-dev.yml
 application-local.yml
 application-prod.yml
+application-tidb.yml
 application-secret.yml
 *-local.yml
 *-prod.yml
+*-tidb.yml
 *.env
+.env
+.env.local
+.env.production
 
 # Chỉ cho phép file .example
 !application*.yml.example
+!*.env.example
 
 ### Database ###
 *.db

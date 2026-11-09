@@ -1,0 +1,84 @@
+# =====================================================
+# TiDB Cloud Configuration Template
+# Copy file này thành application-tidb.yml và điền thông tin
+# =====================================================
+
+spring:
+  application:
+    name: quanlytaisan
+    
+  datasource:
+    # TiDB Cloud connection string
+    # Format: jdbc:mysql://<host>:4000/<database>?sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3
+    url: jdbc:mysql://<your-tidb-host>.clusters.tidb-cloud.com:4000/quanlytaisanqr?sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3
+    username: <your-username>
+    password: <your-password>
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Connection pool settings (HikariCP)
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+    
+  jpa:
+    hibernate:
+      ddl-auto: none  # QUAN TRỌNG: Không tự động tạo/sửa schema trên production
+    show-sql: false   # Tắt log SQL trên production
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+    
+  security:
+    user:
+      name: admin
+      password: change-this-in-production
+      
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    
+# JWT Configuration - ĐỔI SECRET KEY CHO PRODUCTION
+jwt:
+  secret: CHANGE-THIS-SECRET-KEY-FOR-PRODUCTION-MUST-BE-AT-LEAST-256-BITS-LONG-FOR-HS256
+  expiration: 86400000  # 24 hours in milliseconds
+
+# Logging - Production level
+logging:
+  level:
+    root: INFO
+    com.tvu.quanlytaisan: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  file:
+    name: logs/application.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# =====================================================
+# HƯỚNG DẪN LẤY THÔNG TIN TIDB CLOUD:
+# =====================================================
+# 1. Đăng nhập vào TiDB Cloud Console
+# 2. Chọn cluster của bạn
+# 3. Click "Connect"
+# 4. Copy connection string:
+#    - Host: xxx.clusters.tidb-cloud.com
+#    - Port: 4000
+#    - Database: quanlytaisanqr
+#    - Username: <your-username>
+#    - Password: <your-password>
+# 5. Paste vào file application-tidb.yml
+#
+# LƯU Ý:
+# - sslMode=VERIFY_IDENTITY: Bắt buộc cho TiDB Cloud
+# - enabledTLSProtocols=TLSv1.2,TLSv1.3: Protocol bảo mật
+# - MySQL Connector/J >= 8.0.22 required
+# =====================================================
